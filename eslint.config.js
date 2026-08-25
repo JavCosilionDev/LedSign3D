@@ -33,7 +33,12 @@ export default tseslint.config(
     },
   },
   {
-    files: ["**/*.{test,spec}.{ts,tsx}", "vite.config.ts", "vitest.config.ts"],
+    files: [
+      "**/*.{test,spec}.{ts,tsx}",
+      "vite.config.ts",
+      "vitest.config.ts",
+      "playwright.config.ts",
+    ],
     languageOptions: { globals: { ...globals.node } },
   },
   {

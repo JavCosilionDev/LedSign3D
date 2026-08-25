@@ -69,6 +69,24 @@ describe("GenerateModelFromSvg (integración SVG → ensamblajes)", () => {
     expect(assemblies).toHaveLength(2);
   });
 
+  it("una palabra con varias letras genera un ensamblaje watertight por letra", async () => {
+    // "H O L A" como letras simples (rects) separadas.
+    const letters = ["H", "O", "L", "A"];
+    const rects = letters
+      .map((_, i) => `<rect x="${i * 30}" y="0" width="18" height="24"/>`)
+      .join("");
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg">${rects}</svg>`;
+    const assemblies = await useCase.execute(svg, ProjectSettings.create());
+
+    expect(assemblies).toHaveLength(4);
+    for (const assembly of assemblies) {
+      for (const part of [assembly.base, assembly.tapa, assembly.panelDifusor] as Part[]) {
+        expect(part.mesh!.volume).toBeGreaterThan(0);
+        expect(part.mesh!.triangleCount).toBeGreaterThan(0);
+      }
+    }
+  });
+
   it("lanza error si el SVG no tiene formas cerradas", async () => {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg"><line x1="0" y1="0" x2="5" y2="5"/></svg>`;
     await expect(useCase.execute(svg, ProjectSettings.create())).rejects.toThrow();

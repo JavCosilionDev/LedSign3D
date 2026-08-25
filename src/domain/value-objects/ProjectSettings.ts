@@ -253,4 +253,33 @@ export class ProjectSettings {
   toJSON(): ProjectSettingsValues {
     return { ...this.values };
   }
+
+  /**
+   * Advertencias de consistencia geométrica entre parámetros (no bloquean,
+   * pero avisan de configuraciones que no ensamblarán correctamente).
+   * La calibración fina se valida con impresión real (plan v0.1 §5).
+   */
+  assemblyWarnings(): string[] {
+    const warnings: string[] = [];
+
+    const lipDepth = this.get("profundidadLabioTapa");
+    const outerWallHeight = this.get("alturaParedExteriorBase");
+    if (lipDepth > outerWallHeight) {
+      warnings.push(
+        `El labio de la tapa (${lipDepth} mm) es más profundo que la pared exterior ` +
+          `de la base (${outerWallHeight} mm); interferirá al ensamblar.`,
+      );
+    }
+
+    const panelTolerance = this.get("toleranciaPanelDifusor");
+    const wallThickness = this.get("espesorParedTapa");
+    if (panelTolerance >= wallThickness) {
+      warnings.push(
+        `La tolerancia del panel difusor (${panelTolerance} mm) iguala o supera el ` +
+          `espesor de la pared de la tapa (${wallThickness} mm); el rebaje no asentará el panel.`,
+      );
+    }
+
+    return warnings;
+  }
 }

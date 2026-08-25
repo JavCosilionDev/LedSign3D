@@ -31,6 +31,13 @@ export function ParameterPanel() {
       <button type="button" className="reset-btn" onClick={reset}>
         Restablecer valores por defecto
       </button>
+      {settings.assemblyWarnings().length > 0 && (
+        <div className="warning-box" role="alert">
+          {settings.assemblyWarnings().map((warning) => (
+            <p key={warning}>{warning}</p>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

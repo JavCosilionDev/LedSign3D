@@ -95,4 +95,27 @@ describe("ProjectSettings", () => {
     expect(roundtrip.toJSON()).toEqual(s.toJSON());
     expect(roundtrip.get("espesorSueloBase")).toBe(1.5);
   });
+
+  it("assemblyWarnings avisa si el labio excede la pared exterior de la base", () => {
+    const s = ProjectSettings.create()
+      .set("profundidadLabioTapa", 10)
+      .set("alturaParedExteriorBase", 3);
+    const warnings = s.assemblyWarnings();
+    expect(warnings.some((w) => w.includes("labio"))).toBe(true);
+  });
+
+  it("assemblyWarnings avisa si la tolerancia del panel excede la pared de la tapa", () => {
+    const s = ProjectSettings.create()
+      .set("toleranciaPanelDifusor", 2)
+      .set("espesorParedTapa", 1.5);
+    expect(s.assemblyWarnings().some((w) => w.includes("panel difusor"))).toBe(true);
+  });
+
+  it("assemblyWarnings detecta con los defaults el labio más profundo que la pared exterior", () => {
+    // Los defaults del plan (labio 4 mm > pared exterior 3 mm) generan la
+    // advertencia no bloqueante; la calibración fina es empírica (plan §5).
+    const warnings = ProjectSettings.create().assemblyWarnings();
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("labio");
+  });
 });

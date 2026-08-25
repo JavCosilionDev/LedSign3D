@@ -6,6 +6,10 @@ dist/
 dist-ssr/
 coverage/
 
+# Tests
+test-results/
+playwright-report/
+
 # Editor
 .vscode/
 .idea/

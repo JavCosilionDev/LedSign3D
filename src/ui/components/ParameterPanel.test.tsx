@@ -31,4 +31,15 @@ describe("ParameterPanel", () => {
 
     expect(useSettingsStore.getState().settings.get("holgura")).toBe(0.5);
   });
+
+  it("muestra las advertencias de ensamblaje cuando aplica", () => {
+    useSettingsStore.setState({
+      settings: useSettingsStore.getState().settings.set("profundidadLabioTapa", 10),
+    });
+    render(<ParameterPanel />);
+
+    const alert = screen.getByRole("alert");
+    expect(alert).toBeInTheDocument();
+    expect(alert.textContent).toContain("labio");
+  });
 });
