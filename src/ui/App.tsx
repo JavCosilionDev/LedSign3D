@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { FileDrop } from "./components/FileDrop";
 import { SvgPreview2D } from "./components/SvgPreview2D";
+import { SvgSettingsPanel } from "./components/SvgSettingsPanel";
 import { ParameterPanel } from "./components/ParameterPanel";
 import { ExportPanel } from "./components/ExportPanel";
 import { Viewer } from "./three-viewer/Viewer";
@@ -56,6 +57,7 @@ export function App() {
         <aside className="sidebar">
           <FileDrop />
           <SvgPreview2D />
+          <SvgSettingsPanel />
           <ParameterPanel />
           <ExportPanel exporter={exporter} />
         </aside>

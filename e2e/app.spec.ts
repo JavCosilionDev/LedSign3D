@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { HEART_SVG, LINE_ONLY_SVG, gridSvg } from "./fixtures";
+import { HEART_SVG, LINE_ONLY_SVG, SMALL_SVG, gridSvg } from "./fixtures";
 
 async function loadSvg(page: Page, name: string, svg: string): Promise<void> {
   await page.setInputFiles("input[type='file']", {
@@ -25,6 +25,16 @@ test.describe("LEDSign3D e2e", () => {
     await loadSvg(page, "corazon.svg", HEART_SVG);
     await expect(ready(page)).toBeVisible({ timeout: 30_000 });
     await expect(page.locator(".viewer-canvas canvas")).toBeVisible();
+  });
+
+  test("un SVG pequeño se escala automáticamente al mínimo de 50 mm", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByText("Configurar SVG")).toBeVisible();
+    await loadSvg(page, "rect.svg", SMALL_SVG);
+    await expect(ready(page)).toBeVisible({ timeout: 30_000 });
+
+    await expect(page.locator(".svg-size-info")).toContainText("Ancho: 50 mm");
+    await expect(page.locator(".svg-size-info")).toContainText("Alto: 50 mm");
   });
 
   test("cambiar un parámetro regenera el modelo sin errores", async ({ page }) => {

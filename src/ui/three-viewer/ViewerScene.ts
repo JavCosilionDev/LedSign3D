@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { Assembly } from "../../domain/entities/Assembly";
 import type { PartType } from "../../domain/entities/Part";
-import { assemblyPlacements } from "./assemblyPlacement";
+import { layoutAssemblies } from "./assemblyPlacement";
 import { toBufferGeometry } from "./threeMeshConversion";
 
 /** Colores por tipo de pieza (coherentes con la leyenda del plan: tapa=verde, panel=cian, base=gris). */
@@ -18,10 +18,19 @@ const PART_OPACITY: Record<PartType, number> = {
   "panel-difusor": 0.7,
 };
 
+const GRID_COLOR = 0x2a2f3a;
+const GRID_COLOR2 = 0x1d2129;
+const GRID_MARGIN = 1.3; // la cuadrícula cubre la huella del modelo con ~30 % de margen
+const MIN_GRID_SIZE = 40;
+
 /**
  * Gestor de la escena Three.js: renderizador, cámara, iluminación,
  * controles de órbita y sincronización con los ensamblajes del proyecto.
  * El eje Z del modelo (altura) se mapea a Y (arriba) en Three.js.
+ *
+ * El modelo se centra horizontalmente sobre el origen (centro de la
+ * cuadrícula) y la cuadrícula se redimensiona para abarcar toda la huella
+ * con margen, justo bajo la base del modelo.
  */
 export class ViewerScene {
   private container: HTMLElement | null = null;
@@ -30,6 +39,7 @@ export class ViewerScene {
   private camera: THREE.PerspectiveCamera | null = null;
   private controls: OrbitControls | null = null;
   private readonly root = new THREE.Group();
+  private grid: THREE.GridHelper | null = null;
   private frameId = 0;
   private resizeObserver: ResizeObserver | null = null;
 
@@ -53,9 +63,8 @@ export class ViewerScene {
     fill.position.set(-120, 60, -120);
     this.scene.add(fill);
 
-    const grid = new THREE.GridHelper(200, 40, 0x2a2f3a, 0x1d2129);
-    grid.position.y = -0.5;
-    this.scene.add(grid);
+    this.grid = createGridHelper(MIN_GRID_SIZE);
+    this.scene.add(this.grid);
 
     this.camera = new THREE.PerspectiveCamera(
       45,
@@ -76,13 +85,15 @@ export class ViewerScene {
     this.render();
   }
 
-  /** Reemplaza el contenido 3D por los ensamblajes dados y encuadra la cámara. */
+  /** Reemplaza el contenido 3D por los ensamblajes dados, centra el modelo y encuadra la cámara. */
   setAssemblies(assemblies: readonly Assembly[]): void {
     if (!this.scene) return;
     this.clearRoot();
+    this.root.position.set(0, 0, 0);
 
-    for (const assembly of assemblies) {
-      for (const { part, zOffset } of assemblyPlacements(assembly)) {
+    const layout = layoutAssemblies(assemblies);
+    for (const item of layout.items) {
+      for (const { part, zOffset } of item.placements) {
         if (!part.mesh) continue;
         const geometry = toBufferGeometry(part.mesh);
         const material = new THREE.MeshStandardMaterial({
@@ -95,11 +106,12 @@ export class ViewerScene {
         const mesh = new THREE.Mesh(geometry, material);
         // Mapear Z (altura del modelo) → Y (arriba) en el mundo de Three.js.
         mesh.rotation.x = -Math.PI / 2;
-        mesh.position.y = zOffset;
+        mesh.position.set(item.xOffset, zOffset, 0);
         this.root.add(mesh);
       }
     }
 
+    this.centerAndSizedGrid();
     this.frameCamera();
   }
 
@@ -107,6 +119,7 @@ export class ViewerScene {
     cancelAnimationFrame(this.frameId);
     this.resizeObserver?.disconnect();
     this.clearRoot();
+    this.disposeGrid();
     this.controls?.dispose();
     if (this.renderer) {
       this.renderer.dispose();
@@ -116,6 +129,37 @@ export class ViewerScene {
     this.scene = null;
     this.controls = null;
     this.container = null;
+  }
+
+  /** Centra el modelo horizontalmente en el origen y dimensiona la cuadrícula a su huella. */
+  private centerAndSizedGrid(): void {
+    this.root.updateWorldMatrix(true, false);
+    const box = new THREE.Box3().setFromObject(this.root);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+
+    // Centrar sobre el origen (centro de la cuadrícula) en X y Z; la base
+    // permanece en Y (el grid se coloca justo bajo la base).
+    this.root.position.set(-center.x, 0, -center.z);
+
+    if (this.root.children.length > 0) {
+      const footprint = Math.max(size.x, size.z);
+      const gridSize = Math.max(MIN_GRID_SIZE, footprint * GRID_MARGIN);
+      const gridY = box.min.y - 0.5;
+      this.disposeGrid();
+      this.grid = createGridHelper(gridSize);
+      this.grid.position.y = gridY;
+      this.scene?.add(this.grid);
+    }
+  }
+
+  private disposeGrid(): void {
+    if (!this.grid) return;
+    this.scene?.remove(this.grid);
+    this.grid.geometry.dispose();
+    const material = this.grid.material as THREE.Material;
+    material.dispose();
+    this.grid = null;
   }
 
   private clearRoot(): void {
@@ -169,6 +213,11 @@ export class ViewerScene {
       this.renderer.render(this.scene, this.camera);
     }
   };
+}
+
+function createGridHelper(size: number): THREE.GridHelper {
+  const divisions = Math.max(10, Math.min(80, Math.round(size / 10)));
+  return new THREE.GridHelper(size, divisions, GRID_COLOR, GRID_COLOR2);
 }
 
 function disposeObject(obj: THREE.Object3D): void {

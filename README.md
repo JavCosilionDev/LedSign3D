@@ -10,16 +10,20 @@ tres piezas con encastres tipo "click":
 
 ![Arquitectura](https://img.shields.io/badge/architecture-clean--layers-4f8cff)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Tests](https://img.shields.io/badge/tests-138%20unit%20%2B%206%20e2e-blue)
+![Tests](https://img.shields.io/badge/tests-passing-blue)
 
 ## Características (v0.1)
 
 - Carga de SVG por arrastrar-soltar (límite 10 MB, sanitizado contra XSS).
 - Parseo de shapes y paths con curvas (Bézier/arcos), transformaciones y agujeros
   (fill-rule even-odd).
-- **12 parámetros editables** (espesores, alturas, tolerancias y holgura) con
+- **Configurar SVG**: ajusta el tamaño máximo del letrero (dimensión más larga,
+  mínimo 50 mm). Un SVG pequeño se escala automáticamente para ser imprimible y
+  el tamaño resultante se muestra en tiempo real.
+- **13 parámetros editables** (espesores, alturas, tolerancias y holgura) con
   valores por defecto y advertencias de consistencia geométrica.
-- **Vista 3D en tiempo real** (Three.js + OrbitControls) del ensamblaje completo.
+- **Vista 3D en tiempo real** (Three.js + OrbitControls) del ensamblaje completo,
+  con cuadrícula adaptativa al tamaño del modelo y centrado automático.
 - Generación de geometría en un **Web Worker** (no bloquea la UI), con Manifold
   (WASM) para extrusión/booleanos y cavalier-contours para offset 2D.
 - Exportación **STL** (binario o ASCII) por pieza, organizada en un ZIP con
@@ -114,6 +118,7 @@ Los ADRs documentan las decisiones importantes:
 | [0004](docs/adr/0004-web-worker-y-wasm.md)               | Parseo en hilo principal + geometría en worker           |
 | [0005](docs/adr/0005-exportacion-stl-zip.md)             | Exportación v0.1 solo STL + ZIP                          |
 | [0006](docs/adr/0006-visor-threejs.md)                   | Visor Three.js y ensamblaje apilado                      |
+| [0007](docs/adr/0007-tamano-svg-y-vista-centrada.md)     | Tamaño del letrero (Configurar SVG) y vista centrada     |
 
 ## Stack
 

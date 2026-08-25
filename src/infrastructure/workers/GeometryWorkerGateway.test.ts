@@ -43,11 +43,17 @@ function respond(
 
 describe("GeometryWorkerGateway", () => {
   let worker: FakeWorker;
+  let createWorker: () => Worker;
   let gateway: GeometryWorkerGateway;
 
   beforeEach(() => {
     worker = new FakeWorker();
-    gateway = new GeometryWorkerGateway(() => worker as unknown as Worker);
+    createWorker = () => worker as unknown as Worker;
+    gateway = new GeometryWorkerGateway(createWorker);
+  });
+
+  it("no crea el worker hasta la primera generación", () => {
+    expect(worker.posted).toHaveLength(0);
   });
 
   it("envía la solicitud de generación con la configuración serializada", () => {
@@ -82,8 +88,23 @@ describe("GeometryWorkerGateway", () => {
     await expect(promise).rejects.toThrow();
   });
 
-  it("termina el worker al hacer dispose", () => {
+  it("termina el worker al hacer dispose", async () => {
+    const promise = gateway.generateAssemblies([contour], ProjectSettings.create());
     gateway.dispose();
     expect(worker.terminated).toBe(true);
+    await expect(promise).rejects.toThrow();
+  });
+
+  it("recrea el worker tras dispose (doble montaje de StrictMode)", async () => {
+    // Primer uso crea el worker; dispose lo termina (simula el desmontaje).
+    const first = gateway.generateAssemblies([contour], ProjectSettings.create());
+    gateway.dispose();
+    await expect(first).rejects.toThrow();
+
+    // La siguiente generación debe recrear el worker y responder con normalidad.
+    const second = gateway.generateAssemblies([contour], ProjectSettings.create());
+    respond(worker, { id: 2, type: "result", assemblies: [{ contourId: "c1" }] });
+    await expect(second).resolves.toEqual([{ contourId: "c1" }]);
+    expect(worker.posted).toHaveLength(2);
   });
 });

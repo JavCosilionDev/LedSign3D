@@ -9,9 +9,10 @@ import {
 import { ValidationError } from "./ValidationError";
 
 describe("ProjectSettings", () => {
-  it("expone los 12 parámetros del plan v0.1 con sus valores por defecto", () => {
-    expect(PARAM_DEFINITIONS).toHaveLength(12);
+  it("expone los 13 parámetros del plan v0.1 + Configurar SVG con sus valores por defecto", () => {
+    expect(PARAM_DEFINITIONS).toHaveLength(13);
     expect(DEFAULT_PROJECT_SETTINGS).toEqual({
+      svgMaxDimension: 50,
       espesorPanelDifusor: 3,
       toleranciaPanelDifusor: 0.2,
       espesorParedTapa: 1.5,
@@ -27,12 +28,18 @@ describe("ProjectSettings", () => {
     });
   });
 
-  it("agrupa los parámetros en los 4 grupos del menú", () => {
+  it("agrupa los parámetros en los 5 grupos del menú", () => {
     const groupIds = PARAM_GROUPS.map((g) => g.id);
-    expect(groupIds).toEqual(["panelDifusor", "tapa", "base", "toleranciaGeneral"]);
+    expect(groupIds).toEqual(["svg", "panelDifusor", "tapa", "base", "toleranciaGeneral"]);
     for (const g of PARAM_GROUPS) {
       expect(PARAM_DEFINITIONS.some((d) => d.group === g.id)).toBe(true);
     }
+  });
+
+  it("svgMaxDimension tiene mínimo 50 mm y máximo razonable", () => {
+    expect(clampParamValue("svgMaxDimension", 10)).toBe(50);
+    expect(clampParamValue("svgMaxDimension", 5000)).toBe(1000);
+    expect(ProjectSettings.create().get("svgMaxDimension")).toBe(50);
   });
 
   it("cada definición tiene rango válido (min <= default <= max)", () => {

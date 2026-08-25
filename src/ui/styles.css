@@ -451,3 +451,21 @@ body {
 .warning-box p:last-child {
   margin-bottom: 0;
 }
+
+.svg-size-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+}
+
+.svg-size-scale {
+  color: var(--accent);
+  font-family: var(--mono);
+}

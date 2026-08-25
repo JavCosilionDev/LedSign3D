@@ -4,9 +4,17 @@ import manifoldFactory, {
   type Mesh as ManifoldMesh,
   type Manifold as ManifoldType,
 } from "manifold-3d";
+// URL del binario WASM resuelta por Vite como asset (funciona en dev y build).
+// Sin esto, en desarrollo el worker falla al resolver "manifold.wasm" dentro
+// del bundle optimizado (optimizeDeps) y recibe HTML en lugar del binario.
+// En Node (tests) la resolución por defecto de manifold-3d ya es correcta,
+// por lo que solo se usa esta URL en el navegador/worker.
+import wasmUrl from "manifold-3d/manifold.wasm?url";
 import type { IGeometryEngine, Mesh3D, FillRule } from "../../domain/ports/IGeometryEngine";
 import type { OffsetShapeInput } from "../../domain/ports/IOffsetService";
 import type { Polygon2D } from "../../domain/value-objects/Polygon2D";
+
+const IS_NODE = typeof process !== "undefined" && Boolean(process.versions?.node);
 
 /**
  * Implementación de IGeometryEngine con manifold-3d (WASM).
@@ -21,7 +29,9 @@ export class ManifoldEngine implements IGeometryEngine {
   /** Inicializa el WASM de Manifold (idempotente). */
   static async init(): Promise<ManifoldToplevel> {
     if (!ManifoldEngine.toplevel) {
-      const m = await manifoldFactory();
+      const m = IS_NODE
+        ? await manifoldFactory()
+        : await manifoldFactory({ locateFile: () => wasmUrl });
       m.setup();
       ManifoldEngine.toplevel = m;
     }

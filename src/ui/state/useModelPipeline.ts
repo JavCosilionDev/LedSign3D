@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Contour } from "../../domain/entities/Contour";
 import type { ProjectSettings } from "../../domain/value-objects/ProjectSettings";
+import { applySvgScale } from "../../domain/value-objects/SvgScale";
 import type { IGeometryGateway } from "../../application/ports/IGeometryGateway";
 import { ParseSvg } from "../../application/use-cases/ParseSvg";
 import { SvgParser } from "../../infrastructure/svg-parser/SvgParser";
@@ -11,8 +12,9 @@ import { useSettingsStore } from "./settingsStore";
 /**
  * Orquesta el flujo de generación del modelo:
  *  1. Al cargar un SVG → sanitiza y parsea en el hilo principal → contornos.
- *  2. Envía los contornos + parámetros al worker (gateway) → ensamblajes.
- *  3. Ante cambios de parámetros → regenera (debounced 250 ms).
+ *  2. Escala los contornos (hilo principal) según "Configurar SVG".
+ *  3. Envía los contornos escalados + parámetros al worker → ensamblajes.
+ *  4. Ante cambios de parámetros → regenera (debounced 250 ms).
  */
 export function useModelPipeline(gateway: IGeometryGateway): void {
   const svgSource = useProjectStore((s) => s.svgSource);
@@ -30,7 +32,9 @@ export function useModelPipeline(gateway: IGeometryGateway): void {
     async (contours: readonly Contour[], config: ProjectSettings) => {
       setStatus("generating");
       try {
-        const assemblies = await gateway.generateAssemblies(contours, config);
+        // Escalar en el hilo principal evita reenviar el SVG al cambiar solo el tamaño.
+        const { contours: scaled } = applySvgScale(contours, config.get("svgMaxDimension"));
+        const assemblies = await gateway.generateAssemblies(scaled, config);
         setAssemblies(assemblies);
       } catch (err) {
         setStatus("error", toErrorMessage(err));

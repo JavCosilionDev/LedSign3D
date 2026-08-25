@@ -3,7 +3,7 @@ import { ValidationError } from "./ValidationError";
 /**
  * Grupos de parámetros del menú lateral, en orden de presentación.
  */
-export type ParamGroupId = "panelDifusor" | "tapa" | "base" | "toleranciaGeneral";
+export type ParamGroupId = "svg" | "panelDifusor" | "tapa" | "base" | "toleranciaGeneral";
 
 export interface ParamGroup {
   readonly id: ParamGroupId;
@@ -12,6 +12,11 @@ export interface ParamGroup {
 }
 
 export const PARAM_GROUPS: readonly ParamGroup[] = [
+  {
+    id: "svg",
+    label: "Configurar SVG",
+    description: "Ajusta el tamaño del letrero resultante a partir del SVG importado.",
+  },
   {
     id: "panelDifusor",
     label: "Panel difusor",
@@ -51,6 +56,16 @@ export interface ParamDefinition {
 }
 
 export const PARAM_DEFINITIONS = [
+  {
+    id: "svgMaxDimension",
+    label: "Tamaño máximo",
+    group: "svg",
+    unit: "mm",
+    defaultValue: 50,
+    min: 50,
+    max: 1000,
+    step: 5,
+  },
   {
     id: "espesorPanelDifusor",
     label: "Espesor de panel difusor",

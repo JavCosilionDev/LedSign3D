@@ -4,6 +4,9 @@ export const HEART_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-70 -
 /** SVG sin formas cerradas (solo una línea). */
 export const LINE_ONLY_SVG = `<svg xmlns="http://www.w3.org/2000/svg"><line x1="0" y1="0" x2="5" y2="5"/></svg>`;
 
+/** SVG pequeño (10×10): debe escalarse al mínimo de 50 mm. */
+export const SMALL_SVG = `<svg xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10"/></svg>`;
+
 /** Rejilla de `count` círculos para pruebas de rendimiento. */
 export function gridSvg(count: number, radius = 8, gap = 24): string {
   const cols = Math.ceil(Math.sqrt(count));

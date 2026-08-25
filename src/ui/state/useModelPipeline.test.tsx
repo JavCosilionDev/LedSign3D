@@ -37,7 +37,7 @@ describe("useModelPipeline", () => {
   beforeEach(resetStores);
   afterEach(() => vi.useRealTimers());
 
-  it("al cargar un SVG parsea y genera los ensamblajes", async () => {
+  it("al cargar un SVG parsea y genera los ensamblajes escalados a 50 mm", async () => {
     const gateway = new FakeGateway();
     renderHook(() => useModelPipeline(gateway));
 
@@ -52,8 +52,32 @@ describe("useModelPipeline", () => {
 
     await waitFor(() => expect(gateway.calls).toHaveLength(1));
     expect(gateway.calls[0].contours).toHaveLength(1);
+    // El rect 10×10 se escala a 50×50 (mínimo viable).
+    expect(gateway.calls[0].contours[0].boundingBox.maxX).toBeCloseTo(50, 6);
+    expect(gateway.calls[0].contours[0].boundingBox.maxY).toBeCloseTo(50, 6);
     expect(useProjectStore.getState().status).toBe("ready");
     expect(useProjectStore.getState().assemblies).toHaveLength(1);
+  });
+
+  it("cambiar el tamaño máximo del SVG regenera con la nueva escala", async () => {
+    const gateway = new FakeGateway();
+    renderHook(() => useModelPipeline(gateway));
+
+    await act(async () => {
+      useProjectStore
+        .getState()
+        .setSvgSource(
+          '<svg xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10"/></svg>',
+          "a.svg",
+        );
+    });
+    await waitFor(() => expect(gateway.calls).toHaveLength(1));
+
+    await act(async () => {
+      useSettingsStore.getState().setParam("svgMaxDimension", 100);
+    });
+    await waitFor(() => expect(gateway.calls).toHaveLength(2));
+    expect(gateway.calls[1].contours[0].boundingBox.maxX).toBeCloseTo(100, 6);
   });
 
   it("ante un SVG sin formas, marca error sin llamar al gateway", async () => {

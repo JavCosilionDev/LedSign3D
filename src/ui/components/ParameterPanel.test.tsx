@@ -4,13 +4,18 @@ import { ParameterPanel } from "./ParameterPanel";
 import { useSettingsStore } from "../state/settingsStore";
 import { PARAM_DEFINITIONS } from "../../domain/value-objects/ProjectSettings";
 
+/** Parámetros que renderiza ParameterPanel (excluye el grupo "Configurar SVG"). */
+const MODEL_DEFS = PARAM_DEFINITIONS.filter((d) => d.group !== "svg");
+
 describe("ParameterPanel", () => {
-  it("renderiza los 12 parámetros editables agrupados", () => {
+  it("renderiza los 12 parámetros de modelo agrupados", () => {
     render(<ParameterPanel />);
-    for (const def of PARAM_DEFINITIONS) {
+    for (const def of MODEL_DEFS) {
       expect(screen.getByLabelText(def.label)).toBeInTheDocument();
     }
     expect(screen.getByText("Configurar modelo")).toBeInTheDocument();
+    // El grupo SVG no se renderiza aquí.
+    expect(screen.queryByText("Tamaño máximo")).toBeNull();
   });
 
   it("editar un parámetro actualiza el store", () => {

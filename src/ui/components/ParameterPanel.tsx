@@ -2,7 +2,10 @@ import { PARAM_GROUPS, PARAM_DEFINITIONS } from "../../domain/value-objects/Proj
 import { useSettingsStore } from "../state/settingsStore";
 import { ParamControl } from "./ParamControl";
 
-/** Panel de parámetros: "Configurar modelo" con los 4 grupos y 12 parámetros. */
+/** Panel de parámetros: "Configurar modelo" con los 4 grupos y 12 parámetros.
+ *  El grupo "Configurar SVG" se renderiza en SvgSettingsPanel. */
+const MODEL_GROUPS = PARAM_GROUPS.filter((g) => g.id !== "svg");
+
 export function ParameterPanel() {
   const settings = useSettingsStore((s) => s.settings);
   const setParam = useSettingsStore((s) => s.setParam);
@@ -11,7 +14,7 @@ export function ParameterPanel() {
   return (
     <section className="sidebar-section">
       <h2>Configurar modelo</h2>
-      {PARAM_GROUPS.map((group) => {
+      {MODEL_GROUPS.map((group) => {
         const params = PARAM_DEFINITIONS.filter((d) => d.group === group.id);
         return (
           <div className="param-group" key={group.id}>
