@@ -2,8 +2,12 @@ import { useEffect, useMemo } from "react";
 import { FileDrop } from "./components/FileDrop";
 import { SvgPreview2D } from "./components/SvgPreview2D";
 import { ParameterPanel } from "./components/ParameterPanel";
+import { ExportPanel } from "./components/ExportPanel";
 import { Viewer } from "./three-viewer/Viewer";
 import { GeometryWorkerGateway } from "../infrastructure/workers/GeometryWorkerGateway";
+import { StlExporter } from "../infrastructure/exporters/StlExporter";
+import { JsZipZipExporter } from "../infrastructure/exporters/JsZipZipExporter";
+import { ExportStlZip } from "../application/use-cases/ExportStlZip";
 import { useProjectStore, type ProjectStatus } from "./state/projectStore";
 import { useModelPipeline } from "./state/useModelPipeline";
 import "./styles.css";
@@ -35,6 +39,11 @@ export function App() {
   useEffect(() => () => gateway.dispose(), [gateway]);
   useModelPipeline(gateway);
 
+  const exporter = useMemo(
+    () => new ExportStlZip({ stl: new StlExporter(), zip: new JsZipZipExporter() }),
+    [],
+  );
+
   return (
     <div className="app">
       <header className="app-header">
@@ -48,6 +57,7 @@ export function App() {
           <FileDrop />
           <SvgPreview2D />
           <ParameterPanel />
+          <ExportPanel exporter={exporter} />
         </aside>
         <Viewer />
       </div>
