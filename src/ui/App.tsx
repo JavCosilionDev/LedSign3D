@@ -1,8 +1,11 @@
+import { useEffect, useMemo } from "react";
 import { FileDrop } from "./components/FileDrop";
 import { SvgPreview2D } from "./components/SvgPreview2D";
 import { ParameterPanel } from "./components/ParameterPanel";
-import { ViewerPlaceholder } from "./components/ViewerPlaceholder";
+import { Viewer } from "./three-viewer/Viewer";
+import { GeometryWorkerGateway } from "../infrastructure/workers/GeometryWorkerGateway";
 import { useProjectStore, type ProjectStatus } from "./state/projectStore";
+import { useModelPipeline } from "./state/useModelPipeline";
 import "./styles.css";
 
 const STATUS_CLASS: Record<ProjectStatus, string> = {
@@ -23,10 +26,14 @@ const STATUS_LABEL: Record<ProjectStatus, string> = {
 
 /**
  * Layout principal de la aplicación: barra superior, panel lateral
- * (carga + vista previa + parámetros) y área de visor 3D.
+ * (carga + vista previa + parámetros) y visor 3D.
  */
 export function App() {
   const status = useProjectStore((s) => s.status);
+
+  const gateway = useMemo(() => new GeometryWorkerGateway(), []);
+  useEffect(() => () => gateway.dispose(), [gateway]);
+  useModelPipeline(gateway);
 
   return (
     <div className="app">
@@ -42,7 +49,7 @@ export function App() {
           <SvgPreview2D />
           <ParameterPanel />
         </aside>
-        <ViewerPlaceholder />
+        <Viewer />
       </div>
     </div>
   );

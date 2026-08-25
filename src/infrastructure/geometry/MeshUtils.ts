@@ -43,3 +43,21 @@ export function translateMeshZ(mesh: Mesh3D, dz: number): Mesh3D {
   }
   return { ...mesh, vertices };
 }
+
+export interface ZRange {
+  readonly minZ: number;
+  readonly maxZ: number;
+}
+
+/** Extremo inferior y superior de la malla en el eje Z (altura de extrusión). */
+export function meshZRange(mesh: Mesh3D): ZRange {
+  const v = mesh.vertices;
+  let minZ = Number.POSITIVE_INFINITY;
+  let maxZ = Number.NEGATIVE_INFINITY;
+  for (let i = 2; i < v.length; i += 3) {
+    const z = v[i];
+    if (z < minZ) minZ = z;
+    if (z > maxZ) maxZ = z;
+  }
+  return { minZ, maxZ };
+}

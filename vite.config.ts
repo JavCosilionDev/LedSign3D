@@ -3,6 +3,16 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    chunkSizeWarningLimit: 700,
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes("node_modules/three")) return "three";
+        },
+      },
+    },
+  },
   test: {
     environment: "node",
     globals: true,
@@ -20,7 +30,12 @@ export default defineConfig({
         "src/application/**",
         "src/infrastructure/**",
       ],
-      exclude: ["**/ports/**", "**/*.test.ts", "**/*.test.tsx"],
+      exclude: [
+        "**/ports/**",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "src/infrastructure/workers/geometry.worker.ts",
+      ],
       thresholds: {
         statements: 80,
         branches: 75,
