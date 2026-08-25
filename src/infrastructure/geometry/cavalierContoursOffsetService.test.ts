@@ -55,13 +55,8 @@ describe("CavalierContoursOffsetService", () => {
     // Exterior 80×80 (exacto); agujero expandido 40→60 con esquinas redondeadas.
     expect(result.outer).not.toBeNull();
     expect(result.holes).toHaveLength(1);
-    const filled =
-      Math.abs(signedArea(result.outer!)) -
-      Math.abs(signedArea(result.holes[0]));
-    expect(filled).toBeCloseTo(
-      80 * 80 - expandedArea(40 * 40, squarePerimeter(40), 10),
-      0,
-    );
+    const filled = Math.abs(signedArea(result.outer!)) - Math.abs(signedArea(result.holes[0]));
+    expect(filled).toBeCloseTo(80 * 80 - expandedArea(40 * 40, squarePerimeter(40), 10), 0);
   });
 
   it("mantiene el agujero con outset de una forma con hoyo", () => {
@@ -71,13 +66,8 @@ describe("CavalierContoursOffsetService", () => {
     // Exterior expandido con esquinas redondeadas; agujero contraído 40→20 (exacto).
     expect(result.outer).not.toBeNull();
     expect(result.holes).toHaveLength(1);
-    const filled =
-      Math.abs(signedArea(result.outer!)) -
-      Math.abs(signedArea(result.holes[0]));
-    expect(filled).toBeCloseTo(
-      expandedArea(100 * 100, squarePerimeter(100), 10) - 20 * 20,
-      0,
-    );
+    const filled = Math.abs(signedArea(result.outer!)) - Math.abs(signedArea(result.holes[0]));
+    expect(filled).toBeCloseTo(expandedArea(100 * 100, squarePerimeter(100), 10) - 20 * 20, 0);
   });
 
   it("elimina el área cuando el inset supera el radio de la forma", () => {

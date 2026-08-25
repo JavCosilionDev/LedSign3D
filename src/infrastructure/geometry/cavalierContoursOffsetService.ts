@@ -1,8 +1,4 @@
-import {
-  Polyline,
-  Shape,
-  type Polyline as PolylineType,
-} from "cavalier-contours-js";
+import { Polyline, Shape, type Polyline as PolylineType } from "cavalier-contours-js";
 import type {
   IOffsetService,
   OffsetShapeInput,
@@ -10,10 +6,7 @@ import type {
   OffsetDirection,
 } from "../../domain/ports/IOffsetService";
 import type { Polygon2D } from "../../domain/value-objects/Polygon2D";
-import {
-  ensureOrientation,
-  signedArea,
-} from "../../domain/value-objects/GeometryUtils";
+import { ensureOrientation, signedArea } from "../../domain/value-objects/GeometryUtils";
 import { sampleBulgeArc } from "./curveSampler";
 
 /**

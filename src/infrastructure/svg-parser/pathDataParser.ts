@@ -1,10 +1,6 @@
 import type { Point2D } from "../../domain/value-objects/Point2D";
 import type { Polygon2D } from "../../domain/value-objects/Polygon2D";
-import {
-  sampleCubicBezier,
-  sampleQuadraticBezier,
-  sampleArc,
-} from "../geometry/curveSampler";
+import { sampleCubicBezier, sampleQuadraticBezier, sampleArc } from "../geometry/curveSampler";
 
 /**
  * Parser mínimo del atributo `d` de SVG a polilíneas cerradas (contornos).
@@ -144,9 +140,7 @@ export function flattenPathData(d: string, tolerance = 0.1): Polygon2D[] {
       case "S": {
         while (peek()?.kind === "num") {
           const c1 =
-            (lastCmd === "C" || lastCmd === "S") && lastCtrl
-              ? reflect(lastCtrl, current)
-              : current;
+            (lastCmd === "C" || lastCmd === "S") && lastCtrl ? reflect(lastCtrl, current) : current;
           const c2 = target(readCoordPair(), rel);
           const c3 = target(readCoordPair(), rel);
           emitCubic(c1, c2, c3);
@@ -166,9 +160,7 @@ export function flattenPathData(d: string, tolerance = 0.1): Polygon2D[] {
       case "T": {
         while (peek()?.kind === "num") {
           const c1 =
-            (lastCmd === "Q" || lastCmd === "T") && lastCtrl
-              ? reflect(lastCtrl, current)
-              : current;
+            (lastCmd === "Q" || lastCmd === "T") && lastCtrl ? reflect(lastCtrl, current) : current;
           const c2 = target(readCoordPair(), rel);
           emitQuadratic(c1, c2);
         }
@@ -183,16 +175,7 @@ export function flattenPathData(d: string, tolerance = 0.1): Polygon2D[] {
           const large = readNum() !== 0;
           const sweep = readNum() !== 0;
           const end = target(readCoordPair(), rel);
-          const pts = sampleArc(
-            current,
-            end,
-            rx,
-            ry,
-            rot,
-            large,
-            sweep,
-            tolerance,
-          );
+          const pts = sampleArc(current, end, rx, ry, rot, large, sweep, tolerance);
           if (currentPoly) currentPoly.push(...pts.slice(1));
           current = end;
         }
@@ -211,8 +194,7 @@ export function flattenPathData(d: string, tolerance = 0.1): Polygon2D[] {
 
 function tokenize(d: string): Token[] {
   const tokens: Token[] = [];
-  const re =
-    /([a-zA-Z])|([+-]?(?:\d*\.\d+|\d+\.?)(?:[eE][+-]?\d+)?)/g;
+  const re = /([a-zA-Z])|([+-]?(?:\d*\.\d+|\d+\.?)(?:[eE][+-]?\d+)?)/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(d)) !== null) {
     if (m[1] !== undefined) {

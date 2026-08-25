@@ -1,12 +1,5 @@
-import manifoldFactory, {
-  type ManifoldToplevel,
-  type SimplePolygon,
-} from "manifold-3d";
-import type {
-  IGeometryEngine,
-  Mesh3D,
-  FillRule,
-} from "../../domain/ports/IGeometryEngine";
+import manifoldFactory, { type ManifoldToplevel, type SimplePolygon } from "manifold-3d";
+import type { IGeometryEngine, Mesh3D, FillRule } from "../../domain/ports/IGeometryEngine";
 import type { OffsetShapeInput } from "../../domain/ports/IOffsetService";
 import type { Polygon2D } from "../../domain/value-objects/Polygon2D";
 
@@ -40,17 +33,14 @@ export class ManifoldEngine implements IGeometryEngine {
     }
     const m = await ManifoldEngine.init();
 
-    const crossSection = m.CrossSection.ofPolygons(
-      toSimplePolygons(shape),
-      fillRule,
-    );
+    const crossSection = m.CrossSection.ofPolygons(toSimplePolygons(shape), fillRule);
 
     const solid = m.Manifold.extrude(crossSection, height);
     const mesh = solid.getMesh();
 
     const vertices = mesh.vertProperties;
     // numProp >= 3; extraer solo posiciones XYZ interleaved.
-    const positions = new Float32Array((mesh.numVert * 3));
+    const positions = new Float32Array(mesh.numVert * 3);
     const numProp = mesh.numProp;
     for (let v = 0; v < mesh.numVert; v++) {
       positions[v * 3] = vertices[v * numProp];

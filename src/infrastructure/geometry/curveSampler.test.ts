@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  sampleCubicBezier,
-  sampleQuadraticBezier,
-  sampleArc,
-} from "./curveSampler";
+import { sampleCubicBezier, sampleQuadraticBezier, sampleArc } from "./curveSampler";
 import type { Point2D } from "../../domain/value-objects/Point2D";
 
 function dist(a: Point2D, b: Point2D): number {
@@ -46,12 +42,7 @@ describe("curveSampler", () => {
   });
 
   it("muestrea una Bézier cuadrática incluyendo extremos", () => {
-    const pts = sampleQuadraticBezier(
-      { x: 0, y: 0 },
-      { x: 50, y: 100 },
-      { x: 100, y: 0 },
-      0.1,
-    );
+    const pts = sampleQuadraticBezier({ x: 0, y: 0 }, { x: 50, y: 100 }, { x: 100, y: 0 }, 0.1);
     expect(pts[0]).toEqual({ x: 0, y: 0 });
     expect(pts[pts.length - 1]).toEqual({ x: 100, y: 0 });
     // La muestra debe subir hacia el control (máx y ≈ 50 en t=0.5).
@@ -62,16 +53,7 @@ describe("curveSampler", () => {
 
   it("muestrea un arco SVG de 90 grados en el radio correcto", () => {
     const r = 50;
-    const pts = sampleArc(
-      { x: r, y: 0 },
-      { x: 0, y: r },
-      r,
-      r,
-      0,
-      false,
-      true,
-      0.1,
-    );
+    const pts = sampleArc({ x: r, y: 0 }, { x: 0, y: r }, r, r, 0, false, true, 0.1);
     expect(pts[0]).toEqual({ x: r, y: 0 });
     expect(pts[pts.length - 1]).toEqual({ x: 0, y: r });
     for (const p of pts) {
@@ -82,16 +64,7 @@ describe("curveSampler", () => {
 
   it("muestrea un semicírculo con large-arc-flag", () => {
     const r = 30;
-    const pts = sampleArc(
-      { x: -r, y: 0 },
-      { x: r, y: 0 },
-      r,
-      r,
-      0,
-      true,
-      false,
-      0.1,
-    );
+    const pts = sampleArc({ x: -r, y: 0 }, { x: r, y: 0 }, r, r, 0, true, false, 0.1);
     expect(pts[pts.length - 1]).toEqual({ x: r, y: 0 });
     for (const p of pts) {
       const d = Math.hypot(p.x, p.y);
@@ -104,16 +77,7 @@ describe("curveSampler", () => {
 
   it("los segmentos no exceden la longitud esperada por tolerancia", () => {
     const r = 50;
-    const pts = sampleArc(
-      { x: r, y: 0 },
-      { x: 0, y: r },
-      r,
-      r,
-      0,
-      false,
-      true,
-      0.1,
-    );
+    const pts = sampleArc({ x: r, y: 0 }, { x: 0, y: r }, r, r, 0, false, true, 0.1);
     for (let i = 1; i < pts.length; i++) {
       // Para un arco de radio r con tolerancia t, la longitud de cuerda es ~sqrt(8*r*t).
       expect(dist(pts[i - 1], pts[i])).toBeLessThanOrEqual(10);

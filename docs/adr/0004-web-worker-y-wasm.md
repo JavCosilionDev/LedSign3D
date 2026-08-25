@@ -1,13 +1,16 @@
 # ADR-0004: Web Worker para geometría y empaquetado WASM
 
 ## Estado
+
 Aceptado (v0.1).
 
 ## Contexto
+
 El procesamiento de un SVG (hasta 100 contornos) debe ejecutarse en < 2 s sin
 bloquear la UI. Manifold requiere WASM; cavalier-contours-js es JS puro.
 
 ## Decisiones
+
 1. **Geometría en un Web Worker** (`geometry.worker.ts`): parsing, offset,
    extrusión y booleanos se ejecutan en el worker; la comunicación usa
    `postMessage` con datos serializables (arrays de puntos / `Mesh3D` con
@@ -19,6 +22,7 @@ bloquear la UI. Manifold requiere WASM; cavalier-contours-js es JS puro.
    necesidad de WASM, simplificando el empaquetado.
 
 ## Consecuencias
+
 - La UI permanece fluida durante el cálculo; el visor muestra un estado de
   carga y actualiza al recibir el `Mesh3D`.
 - El diseño de puertos (`IOffsetService`, `IGeometryEngine`) permite ejecutar

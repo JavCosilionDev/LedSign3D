@@ -28,6 +28,7 @@ El frente iluminado es un panel difusor (transparente).
 - Sin DXF / corte láser en v0.1 (pospuesto a desarrollo futuro).
 
 ### Fuera de alcance v0.1
+
 - Editor de texto tipográfico (fuentes, tamaños).
 - Exportación DXF / corte láser.
 - Persistencia en servidor o bases de datos.
@@ -46,20 +47,20 @@ Grupo "Configurar modelo". **Los 12 parámetros son EDITABLES por el usuario**
 en el menú lateral (sliders/inputs numéricos); la siguiente tabla muestra los
 valores por DEFECTO con los que arranca la app (mm):
 
-| Grupo | Parámetro | Default |
-|---|---|---|
-| Panel difusor | Espesor de panel difusor | 3 mm |
-| Panel difusor | Tolerancia de panel difusor | 0.2 mm |
-| Tapa | Espesor de la pared de la tapa | 1.5 mm |
-| Tapa | Altura de la pared de la tapa | 40 mm |
-| Tapa | Profundidad del labio de la tapa | 4 mm |
-| Tapa | Espesor del labio de la tapa | 2 mm |
-| Base | Espesor del suelo base | 1.5 mm |
-| Base | Espesor de la pared exterior de la base | 1.5 mm |
-| Base | Altura de la pared exterior de la base | 3 mm |
-| Base | Espesor de la pared interior de la base | 1.5 mm |
-| Base | Altura de la pared interior de la base | 30 mm |
-| Tolerancia General | Holgura | 0.5 mm |
+| Grupo              | Parámetro                               | Default |
+| ------------------ | --------------------------------------- | ------- |
+| Panel difusor      | Espesor de panel difusor                | 3 mm    |
+| Panel difusor      | Tolerancia de panel difusor             | 0.2 mm  |
+| Tapa               | Espesor de la pared de la tapa          | 1.5 mm  |
+| Tapa               | Altura de la pared de la tapa           | 40 mm   |
+| Tapa               | Profundidad del labio de la tapa        | 4 mm    |
+| Tapa               | Espesor del labio de la tapa            | 2 mm    |
+| Base               | Espesor del suelo base                  | 1.5 mm  |
+| Base               | Espesor de la pared exterior de la base | 1.5 mm  |
+| Base               | Altura de la pared exterior de la base  | 3 mm    |
+| Base               | Espesor de la pared interior de la base | 1.5 mm  |
+| Base               | Altura de la pared interior de la base  | 30 mm   |
+| Tolerancia General | Holgura                                 | 0.5 mm  |
 
 `ProjectSettings` usa unidades en mm, tipado estricto, validación de rangos
 (rangos mín./máx. por parámetro) y un valor `default` para reset/restablecer.
@@ -97,6 +98,7 @@ costado (se muestra una pared; la otra se refleja simétricamente):
 > base como muro interior + suelo, cavidad LED a la derecha del muro gris).
 
 ### Relaciones de offset (C = contorno SVG, con agujeros por evenodd)
+
 - **Panel difusor:** extrusión plana de C (incluyendo agujeros), espesor =
   espesor del panel difusor, contorno ajustado por tolerancia de panel difusor
   para entrar al rebaje (labio superior) de la tapa con click.
@@ -109,6 +111,7 @@ costado (se muestra una pared; la otra se refleja simétricamente):
   para LEDs, con suelo cerrado por debajo.
 
 ### Dos encastres tipo "click" (auto-cálculo paramétrico)
+
 1. **Panel difusor → tapa:** el difusor se apoya y encastra en el rebaje/labio
    superior de la tapa, regido por `tolerancia de panel difusor` (0.2 mm).
 2. **Tapa → base:** la pared verde de la tapa se desliza junto al muro gris de
@@ -152,18 +155,18 @@ costado (se muestra una pared; la otra se refleja simétricamente):
 
 ## 10. Stack tecnológico
 
-| Componente | Elección |
-|---|---|
-| Lenguaje / Build | TypeScript (estricto) + Vite |
-| UI | React 18 + Zustand (estado global) |
-| 3D | Three.js + OrbitControls (WebGL2; WebGPU si estable) |
-| Geometría (extrusión/booleanos) | manifold-3d (WASM) |
-| Offset 2D | cavalierContours (v0.1); migrable a Clipper2-WASM en v1.0+ vía IOffsetService |
-| SVG | DOMParser + DOMPurify (sanitización) + muestreo propio de Bézier |
-| Exportación | three STLExporter + JSZip |
-| Testing | Vitest + @testing-library/react + Playwright (e2e) |
-| Calidad | ESLint + Prettier + Husky/lint-staged |
-| Licencia | MIT |
+| Componente                      | Elección                                                                      |
+| ------------------------------- | ----------------------------------------------------------------------------- |
+| Lenguaje / Build                | TypeScript (estricto) + Vite                                                  |
+| UI                              | React 18 + Zustand (estado global)                                            |
+| 3D                              | Three.js + OrbitControls (WebGL2; WebGPU si estable)                          |
+| Geometría (extrusión/booleanos) | manifold-3d (WASM)                                                            |
+| Offset 2D                       | cavalierContours (v0.1); migrable a Clipper2-WASM en v1.0+ vía IOffsetService |
+| SVG                             | DOMParser + DOMPurify (sanitización) + muestreo propio de Bézier              |
+| Exportación                     | three STLExporter + JSZip                                                     |
+| Testing                         | Vitest + @testing-library/react + Playwright (e2e)                            |
+| Calidad                         | ESLint + Prettier + Husky/lint-staged                                         |
+| Licencia                        | MIT                                                                           |
 
 ## 11. Arquitectura de software
 
@@ -190,7 +193,9 @@ src/
 ```
 
 ### Modelo de datos
+
 `SVGDocument → Contour[] → Assembly[] → Part[]`
+
 - `Contour`: camino cerrado 2D con orientación, agujeros y bounding box.
 - `Assembly`: base + tapa + panel difusor de un contorno.
 - `Part`: `{ type, mesh (BufferGeometry), contourId, metadata }`.
@@ -216,15 +221,15 @@ src/
 
 ## 14. Fases de desarrollo
 
-| Fase | Objetivo | Entregable |
-|---|---|---|
-| 0 | Prototipar Manifold (extrusión con agujeros) y Clipper (offset en curvas difíciles); ADR de librerías; definir empaquetado WASM en worker | Repositorio con prototipo + ADRs |
-| 1 | Scaffold Vite + React + TS, ESLint/Prettier/Vitest, capas, Zustand, componentes base | Proyecto base corriendo |
-| 2 | Motor de geometría: parser SVG, offset, builders de base/tapa/panel difusor + tests | Módulo geometry-engine testeable |
-| 3 | Visor 3D: escena Three.js, OrbitControls, worker, sync de mallas | Visor 3D funcional (>30 FPS) |
-| 4 | UI + exportación: panel de parámetros, STL + ZIP, feedback | App usable de punta a punta |
-| 5 | Hardening: e2e Playwright, rendimiento, corrección geométrica | Candidato a release |
-| 6 | Docs + lanzamiento: README, ADRs, LICENSE MIT, release v0.1 | Repositorio público v0.1 |
+| Fase | Objetivo                                                                                                                                  | Entregable                       |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| 0    | Prototipar Manifold (extrusión con agujeros) y Clipper (offset en curvas difíciles); ADR de librerías; definir empaquetado WASM en worker | Repositorio con prototipo + ADRs |
+| 1    | Scaffold Vite + React + TS, ESLint/Prettier/Vitest, capas, Zustand, componentes base                                                      | Proyecto base corriendo          |
+| 2    | Motor de geometría: parser SVG, offset, builders de base/tapa/panel difusor + tests                                                       | Módulo geometry-engine testeable |
+| 3    | Visor 3D: escena Three.js, OrbitControls, worker, sync de mallas                                                                          | Visor 3D funcional (>30 FPS)     |
+| 4    | UI + exportación: panel de parámetros, STL + ZIP, feedback                                                                                | App usable de punta a punta      |
+| 5    | Hardening: e2e Playwright, rendimiento, corrección geométrica                                                                             | Candidato a release              |
+| 6    | Docs + lanzamiento: README, ADRs, LICENSE MIT, release v0.1                                                                               | Repositorio público v0.1         |
 
 ## 15. Criterios de éxito
 
@@ -237,13 +242,13 @@ src/
 
 ## 16. Riesgos y mitigaciones
 
-| Riesgo | Prob. | Impacto | Mitigación |
-|---|---|---|---|
-| Bugs en librerías de geometría con curvas complejas | Media | Alto | Prototipar temprano (Fase 0); plan B (Clipper2-WASM, JSCAD, OpenCascade) |
-| Rendimiento insuficiente en el navegador | Media | Alto | Workers, preview baja resolución, caché, debounce, WebGPU si posible |
-| Dificultad en encastres tipo click | Alta | Alto | Interferencia configurable; iterar con impresiones 3D reales; documentar |
-| Complejidad de parsing SVG (curvas, transformaciones) | Media | Medio | Librerías robustas + sanitización; limitar a features comunes |
-| Empaquetado WASM de Manifold en worker con Vite | Media | Alto | ADR en Fase 0; evaluar carga dinámica y bundles |
+| Riesgo                                                | Prob. | Impacto | Mitigación                                                               |
+| ----------------------------------------------------- | ----- | ------- | ------------------------------------------------------------------------ |
+| Bugs en librerías de geometría con curvas complejas   | Media | Alto    | Prototipar temprano (Fase 0); plan B (Clipper2-WASM, JSCAD, OpenCascade) |
+| Rendimiento insuficiente en el navegador              | Media | Alto    | Workers, preview baja resolución, caché, debounce, WebGPU si posible     |
+| Dificultad en encastres tipo click                    | Alta  | Alto    | Interferencia configurable; iterar con impresiones 3D reales; documentar |
+| Complejidad de parsing SVG (curvas, transformaciones) | Media | Medio   | Librerías robustas + sanitización; limitar a features comunes            |
+| Empaquetado WASM de Manifold en worker con Vite       | Media | Alto    | ADR en Fase 0; evaluar carga dinámica y bundles                          |
 
 ## 17. Puntos abiertos / decisiones pendientes de confirmación
 

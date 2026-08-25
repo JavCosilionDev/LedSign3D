@@ -46,8 +46,7 @@ function recurseCubic(
 ): void {
   if (depth >= MAX_DEPTH) return;
   const flatEnough =
-    pointLineDistance(p1, p0, p3) <= tolerance &&
-    pointLineDistance(p2, p0, p3) <= tolerance;
+    pointLineDistance(p1, p0, p3) <= tolerance && pointLineDistance(p2, p0, p3) <= tolerance;
   if (flatEnough) return;
   const m01 = pointLerp(p0, p1, 0.5);
   const m12 = pointLerp(p1, p2, 0.5);
@@ -91,16 +90,7 @@ export function sampleBulgeArc(
   const absTheta = Math.abs(theta);
   const denom = Math.sin(absTheta / 2);
   const r = denom > 1e-9 ? chord / (2 * denom) : chord / 2;
-  return sampleArc(
-    start,
-    end,
-    r,
-    r,
-    0,
-    absTheta > Math.PI,
-    bulge > 0,
-    tolerance,
-  );
+  return sampleArc(start, end, r, r, 0, absTheta > Math.PI, bulge > 0, tolerance);
 }
 
 /**
@@ -133,12 +123,11 @@ export function sampleArc(
   const y1p = -sinPhi * dx + cosPhi * dy;
 
   // 3) Corrección de radios (F.6.6.3)
-  let lambda = (x1p * x1p) / (rx * rx) + (y1p * y1p) / (ry * ry);
-  if (lambda > 1) {
-    const s = Math.sqrt(lambda);
+  const scale = (x1p * x1p) / (rx * rx) + (y1p * y1p) / (ry * ry);
+  if (scale > 1) {
+    const s = Math.sqrt(scale);
     rx *= s;
     ry *= s;
-    lambda = 1;
   }
 
   // 4) Ecuación 5.2: centro (cx', cy')
@@ -154,10 +143,13 @@ export function sampleArc(
   const cy = sinPhi * cxp + cosPhi * cyp + (start.y + end.y) / 2;
 
   // 6) Ecuaciones 5.4 y 5.5: ángulos inicial y barrido
-  const theta1 = angleBetween({ x: 1, y: 0 }, {
-    x: (x1p - cxp) / rx,
-    y: (y1p - cyp) / ry,
-  });
+  const theta1 = angleBetween(
+    { x: 1, y: 0 },
+    {
+      x: (x1p - cxp) / rx,
+      y: (y1p - cyp) / ry,
+    },
+  );
   const u = { x: (x1p - cxp) / rx, y: (y1p - cyp) / ry };
   const v = { x: (-x1p - cxp) / rx, y: (-y1p - cyp) / ry };
   let deltaTheta = angleBetween(u, v);
