@@ -1,4 +1,5 @@
 import type { OffsetShapeInput } from "./IOffsetService";
+import type { Polygon2D } from "../value-objects/Polygon2D";
 
 /**
  * Malla 3D neutral (posiciones interleaved XYZ + índices de triángulos).
@@ -24,12 +25,22 @@ export type FillRule = "EvenOdd" | "NonZero";
  */
 export interface IGeometryEngine {
   /**
-   * Extruye una sección 2D (contorno + agujeros) a lo largo del eje Z.
+   * Extruye una lista arbitraria de bucles 2D a lo largo del eje Z,
+   * interpretados con la regla de relleno indicada (EvenOdd por defecto).
+   * Permite representar regiones con contornos anidados (agujeros, islas).
    * La base de la pieza queda en z=0 y crece hacia +Z.
-   *
-   * @param shape Sección transversal 2D (exterior + agujeros).
-   * @param height Altura de extrusión (mm).
-   * @param fillRule Regla de relleno para interpretar contornos anidados.
+   */
+  extrudeLoops(loops: readonly Polygon2D[], height: number, fillRule?: FillRule): Promise<Mesh3D>;
+
+  /**
+   * Extruye una sección 2D (contorno exterior + agujeros) a lo largo del eje Z.
+   * Equivale a `extrudeLoops([outer, ...holes], ...)`.
    */
   extrude(shape: OffsetShapeInput, height: number, fillRule?: FillRule): Promise<Mesh3D>;
+
+  /** Unión booleana de dos mallas sólidas. */
+  union(a: Mesh3D, b: Mesh3D): Promise<Mesh3D>;
+
+  /** Diferencia booleana: elimina `b` de `a`. */
+  difference(a: Mesh3D, b: Mesh3D): Promise<Mesh3D>;
 }

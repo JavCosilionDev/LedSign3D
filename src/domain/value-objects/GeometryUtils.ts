@@ -73,3 +73,22 @@ export function pointLineDistance(p: Point2D, a: Point2D, b: Point2D): number {
   }
   return Math.abs((p.x - a.x) * dy - (p.y - a.y) * dx) / Math.sqrt(lenSq);
 }
+
+/**
+ * Test de punto dentro de polígono (ray casting, regla even-odd).
+ * No incluye puntos exactamente sobre el contorno de forma determinista.
+ */
+export function pointInPolygon(p: Point2D, polygon: Polygon2D): boolean {
+  const pts = polygon.points;
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const a = pts[i];
+    const b = pts[j];
+    const crosses = a.y > p.y !== b.y > p.y;
+    if (crosses) {
+      const x = a.x + ((p.y - a.y) / (b.y - a.y)) * (b.x - a.x);
+      if (x > p.x) inside = !inside;
+    }
+  }
+  return inside;
+}

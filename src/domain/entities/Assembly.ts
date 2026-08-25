@@ -1,4 +1,12 @@
-import type { Part } from "./Part";
+import type { Part, PartType } from "./Part";
+
+/** Claves de pieza dentro de un ensamblaje. */
+export type AssemblyKey = "base" | "tapa" | "panelDifusor";
+
+/** Mapea el tipo de pieza a la clave del ensamblaje. */
+export function assemblyKeyFor(type: PartType): AssemblyKey {
+  return type === "panel-difusor" ? "panelDifusor" : type;
+}
 
 /**
  * Ensamblaje de las tres piezas que se generan por cada contorno del SVG:

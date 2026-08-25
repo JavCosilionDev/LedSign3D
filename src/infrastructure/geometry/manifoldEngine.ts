@@ -1,4 +1,9 @@
-import manifoldFactory, { type ManifoldToplevel, type SimplePolygon } from "manifold-3d";
+import manifoldFactory, {
+  type ManifoldToplevel,
+  type SimplePolygon,
+  type Mesh as ManifoldMesh,
+  type Manifold as ManifoldType,
+} from "manifold-3d";
 import type { IGeometryEngine, Mesh3D, FillRule } from "../../domain/ports/IGeometryEngine";
 import type { OffsetShapeInput } from "../../domain/ports/IOffsetService";
 import type { Polygon2D } from "../../domain/value-objects/Polygon2D";
@@ -23,35 +28,79 @@ export class ManifoldEngine implements IGeometryEngine {
     return ManifoldEngine.toplevel;
   }
 
-  async extrude(
-    shape: OffsetShapeInput,
+  async extrudeLoops(
+    loops: readonly Polygon2D[],
     height: number,
     fillRule: FillRule = "EvenOdd",
   ): Promise<Mesh3D> {
     if (height <= 0) {
       throw new Error("La altura de extrusión debe ser mayor que 0");
     }
-    const m = await ManifoldEngine.init();
-
-    const crossSection = m.CrossSection.ofPolygons(toSimplePolygons(shape), fillRule);
-
-    const solid = m.Manifold.extrude(crossSection, height);
-    const mesh = solid.getMesh();
-
-    const vertices = mesh.vertProperties;
-    // numProp >= 3; extraer solo posiciones XYZ interleaved.
-    const positions = new Float32Array(mesh.numVert * 3);
-    const numProp = mesh.numProp;
-    for (let v = 0; v < mesh.numVert; v++) {
-      positions[v * 3] = vertices[v * numProp];
-      positions[v * 3 + 1] = vertices[v * numProp + 1];
-      positions[v * 3 + 2] = vertices[v * numProp + 2];
+    const simple: SimplePolygon[] = [];
+    for (const loop of loops) addPolygon(simple, loop);
+    if (simple.length === 0) {
+      throw new Error("No hay contornos para extruir");
     }
 
+    const m = await ManifoldEngine.init();
+    const crossSection = m.CrossSection.ofPolygons(simple, fillRule);
+    const solid = m.Manifold.extrude(crossSection, height);
+    const mesh3d = this.finalize(solid);
+    crossSection.delete();
+    return mesh3d;
+  }
+
+  async extrude(
+    shape: OffsetShapeInput,
+    height: number,
+    fillRule: FillRule = "EvenOdd",
+  ): Promise<Mesh3D> {
+    return this.extrudeLoops([shape.outer, ...shape.holes], height, fillRule);
+  }
+
+  async union(a: Mesh3D, b: Mesh3D): Promise<Mesh3D> {
+    const m = await ManifoldEngine.init();
+    const ma = this.meshToManifold(m, a);
+    const mb = this.meshToManifold(m, b);
+    const result = ma.add(mb);
+    const mesh3d = this.finalize(result);
+    ma.delete();
+    mb.delete();
+    return mesh3d;
+  }
+
+  async difference(a: Mesh3D, b: Mesh3D): Promise<Mesh3D> {
+    const m = await ManifoldEngine.init();
+    const ma = this.meshToManifold(m, a);
+    const mb = this.meshToManifold(m, b);
+    const result = ma.subtract(mb);
+    const mesh3d = this.finalize(result);
+    ma.delete();
+    mb.delete();
+    return mesh3d;
+  }
+
+  private meshToManifold(m: ManifoldToplevel, mesh3d: Mesh3D): ManifoldType {
+    const mesh = new m.Mesh({
+      numProp: 3,
+      vertProperties: mesh3d.vertices,
+      triVerts: mesh3d.triangles,
+    });
+    return m.Manifold.ofMesh(mesh as ManifoldMesh);
+  }
+
+  /** Extrae posiciones/índices/volumen de un sólido y libera su memoria WASM. */
+  private finalize(solid: ManifoldType): Mesh3D {
+    const mesh = solid.getMesh();
+    const numProp = mesh.numProp;
+    const positions = new Float32Array(mesh.numVert * 3);
+    for (let v = 0; v < mesh.numVert; v++) {
+      positions[v * 3] = mesh.vertProperties[v * numProp];
+      positions[v * 3 + 1] = mesh.vertProperties[v * numProp + 1];
+      positions[v * 3 + 2] = mesh.vertProperties[v * numProp + 2];
+    }
     const volume = solid.volume();
     solid.delete();
-    crossSection.delete();
-
     return {
       vertices: positions,
       triangles: mesh.triVerts.slice(),
@@ -59,13 +108,6 @@ export class ManifoldEngine implements IGeometryEngine {
       triangleCount: mesh.numTri,
     };
   }
-}
-
-function toSimplePolygons(shape: OffsetShapeInput): SimplePolygon[] {
-  const result: SimplePolygon[] = [];
-  addPolygon(result, shape.outer);
-  for (const hole of shape.holes) addPolygon(result, hole);
-  return result;
 }
 
 function addPolygon(out: SimplePolygon[], polygon: Polygon2D): void {
