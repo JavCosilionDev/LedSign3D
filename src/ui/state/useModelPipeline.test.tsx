@@ -52,9 +52,10 @@ describe("useModelPipeline", () => {
 
     await waitFor(() => expect(gateway.calls).toHaveLength(1));
     expect(gateway.calls[0].contours).toHaveLength(1);
-    // El rect 10×10 se escala a 50×50 (mínimo viable).
+    // El rect 10×10 se escala a 50×50 (mínimo viable). Con Y invertida, el
+    // bounding box queda en x 0..50, y -50..0.
     expect(gateway.calls[0].contours[0].boundingBox.maxX).toBeCloseTo(50, 6);
-    expect(gateway.calls[0].contours[0].boundingBox.maxY).toBeCloseTo(50, 6);
+    expect(Math.abs(gateway.calls[0].contours[0].boundingBox.minY)).toBeCloseTo(50, 6);
     expect(useProjectStore.getState().status).toBe("ready");
     expect(useProjectStore.getState().assemblies).toHaveLength(1);
   });

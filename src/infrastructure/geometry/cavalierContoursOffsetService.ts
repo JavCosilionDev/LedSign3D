@@ -18,8 +18,8 @@ import { sampleBulgeArc } from "./curveSampler";
  * convención, aislando la librería del resto de la aplicación.
  */
 export class CavalierContoursOffsetService implements IOffsetService {
-  /** Tolerancia de muestreo de arcos (bulge) → polilínea. */
-  constructor(private readonly tolerance = 0.1) {}
+  /** Tolerancia de muestreo de arcos (bulge) → polilínea (esquinas suaves). */
+  constructor(private readonly tolerance = 0.01) {}
   offsetShape(
     shape: OffsetShapeInput,
     distance: number,

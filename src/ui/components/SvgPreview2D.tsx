@@ -22,7 +22,7 @@ export function SvgPreview2D() {
       <h2>Vista previa</h2>
       <div className="svg-preview">
         {dataUrl ? (
-          <img src={dataUrl} alt="Vista previa del SVG cargado" />
+          <img src={dataUrl} className="svg-preview-img" alt="Vista previa del SVG cargado" />
         ) : (
           <span>Sin SVG cargado</span>
         )}

@@ -29,7 +29,12 @@ const SKIP_TAGS = new Set([
   "switch",
 ]);
 
-const SAMPLING_TOLERANCE = 0.1;
+/** Segmentos objetivo por vuelta completa de círculo (suavizado uniforme). */
+const CIRCLE_SEGMENTS = 256;
+/** Tolerancia gruesa para estimar el tamaño del documento (fallback sin viewBox). */
+const COARSE_TOLERANCE = 1;
+/** Tamaño de documento por defecto si no se puede estimar. */
+const DEFAULT_DOC_SIZE = 100;
 
 /**
  * Parser de SVG a contornos 2D cerrados.
@@ -39,6 +44,10 @@ const SAMPLING_TOLERANCE = 0.1;
  *   Web Workers); los contornos resultantes son datos neutrales que se
  *   envían al worker para la generación de geometría.
  * - Aplica transformaciones de grupos y elementos (translate/scale/rotate/...).
+ * - Convierte del sistema de coordenadas de SVG (Y hacia abajo) al estándar
+ *   (Y hacia arriba) para que la geometría 3D y el STL no queden espejados.
+ * - Muestrea las curvas con tolerancia adaptativa al tamaño del documento,
+ *   dando un suavizado uniforme (~256 segmentos por círculo) en todos los SVGs.
  * - v0.1: ignora texto, imágenes y referencias externas.
  */
 export class SvgParser implements ISvgParser {
@@ -52,12 +61,29 @@ export class SvgParser implements ISvgParser {
       throw new Error("El archivo no contiene un elemento <svg> raíz");
     }
 
+    const tolerance = this.computeTolerance(root);
     const polygons: Polygon2D[] = [];
-    this.walk(root, parseTransform(root.getAttribute("transform")), polygons);
+    this.walk(root, parseTransform(root.getAttribute("transform")), polygons, tolerance);
     return buildContours(polygons);
   }
 
-  private walk(el: Element, matrixToRoot: Matrix2D, out: Polygon2D[]): void {
+  /** Tolerancia de muestreo para ~CIRCLE_SEGMENTS segmentos por vuelta de círculo. */
+  private computeTolerance(root: Element): number {
+    const docSize = this.documentSize(root);
+    return (docSize * Math.PI ** 2) / (4 * CIRCLE_SEGMENTS ** 2);
+  }
+
+  /** Dimensión representativa del documento (viewBox o estimación por barrido). */
+  private documentSize(root: Element): number {
+    const viewBox = parseViewBox(root.getAttribute("viewBox"));
+    if (viewBox) return viewBox;
+    const coarse: Polygon2D[] = [];
+    this.walk(root, parseTransform(root.getAttribute("transform")), coarse, COARSE_TOLERANCE);
+    const size = boundingBoxMaxDimension(coarse);
+    return size > 0 ? size : DEFAULT_DOC_SIZE;
+  }
+
+  private walk(el: Element, matrixToRoot: Matrix2D, out: Polygon2D[], tolerance: number): void {
     for (const child of Array.from(el.children)) {
       const tag = child.tagName.toLowerCase();
       if (SKIP_TAGS.has(tag)) continue;
@@ -69,9 +95,13 @@ export class SvgParser implements ISvgParser {
 
       const d = shapeToPath(tag, readAttrs(child));
       if (d) {
-        for (const poly of flattenPathData(d, SAMPLING_TOLERANCE)) {
+        for (const poly of flattenPathData(d, tolerance)) {
           out.push({
-            points: poly.points.map((p) => childMatrix.apply(p)),
+            points: poly.points.map((p) => {
+              const t = childMatrix.apply(p);
+              // SVG usa Y hacia abajo; se invierte para coordenadas estándar.
+              return { x: t.x, y: -t.y };
+            }),
             isClosed: poly.isClosed,
           });
         }
@@ -79,10 +109,38 @@ export class SvgParser implements ISvgParser {
       }
 
       if (CONTAINER_TAGS.has(tag)) {
-        this.walk(child, childMatrix, out);
+        this.walk(child, childMatrix, out, tolerance);
       }
     }
   }
+}
+
+/** Lee el viewBox "minX minY width height" y devuelve la dimensión más larga. */
+function parseViewBox(value: string | null): number | null {
+  if (!value) return null;
+  const parts = value
+    .split(/[\s,]+/)
+    .filter(Boolean)
+    .map(Number);
+  if (parts.length < 4 || parts.some((n) => Number.isNaN(n))) return null;
+  return Math.max(parts[2], parts[3], 1);
+}
+
+function boundingBoxMaxDimension(polygons: readonly Polygon2D[]): number {
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  for (const poly of polygons) {
+    for (const p of poly.points) {
+      if (p.x < minX) minX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y > maxY) maxY = p.y;
+    }
+  }
+  if (!Number.isFinite(minX)) return 0;
+  return Math.max(maxX - minX, maxY - minY);
 }
 
 function readAttrs(el: Element): Record<string, string> {

@@ -6,7 +6,8 @@ import { signedArea } from "../../domain/value-objects/GeometryUtils";
 function areaOf(tag: string, attrs: Record<string, string>): number {
   const d = shapeToPath(tag, attrs);
   if (!d) return 0;
-  return Math.abs(signedArea(flattenPathData(d, 0.1)[0]));
+  // Tolerancia fina: la poligonal aproxima bien el área del círculo/elipse.
+  return Math.abs(signedArea(flattenPathData(d, 0.001)[0]));
 }
 
 describe("shapeToPath", () => {

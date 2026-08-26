@@ -156,12 +156,13 @@ export function sampleArc(
   if (!sweepFlag && deltaTheta > 0) deltaTheta -= 2 * Math.PI;
   if (sweepFlag && deltaTheta < 0) deltaTheta += 2 * Math.PI;
 
-  // 7) Muestrear el arco en el espacio del centro
-  //    Número de segmentos según la longitud del arco y la tolerancia.
+  // 7) Muestrear el arco en el espacio del centro.
+  //    Segmentos para que la desviación máxima de la cuerda al arco sea
+  //    <= tolerance (consistente con el muestreo de Bézier). Para un arco de
+  //    radio r y barrido θ: n = θ·√(r/(8·tolerance)).
   const arcAngle = Math.abs(deltaTheta);
   const r = Math.max(rx, ry);
-  const approxLen = r * arcAngle;
-  const segments = Math.max(1, Math.ceil(approxLen / Math.sqrt(2 * tolerance)));
+  const segments = Math.max(1, Math.ceil(arcAngle * Math.sqrt(r / (8 * tolerance))));
 
   for (let i = 1; i <= segments; i++) {
     const t = i / segments;

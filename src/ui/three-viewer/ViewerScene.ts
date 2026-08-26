@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { Assembly } from "../../domain/entities/Assembly";
 import type { PartType } from "../../domain/entities/Part";
-import { layoutAssemblies } from "./assemblyPlacement";
+import { assemblyPlacements } from "./assemblyPlacement";
 import { toBufferGeometry } from "./threeMeshConversion";
 
 /** Colores por tipo de pieza (coherentes con la leyenda del plan: tapa=verde, panel=cian, base=gris). */
@@ -91,9 +91,11 @@ export class ViewerScene {
     this.clearRoot();
     this.root.position.set(0, 0, 0);
 
-    const layout = layoutAssemblies(assemblies);
-    for (const item of layout.items) {
-      for (const { part, zOffset } of item.placements) {
+    // Cada ensamblaje se apila en vertical (base → tapa → panel). Las mallas
+    // ya conservan las coordenadas del SVG, por lo que las piezas mantienen su
+    // disposición relativa original (sin reordenarlas en fila).
+    for (const assembly of assemblies) {
+      for (const { part, zOffset } of assemblyPlacements(assembly)) {
         if (!part.mesh) continue;
         const geometry = toBufferGeometry(part.mesh);
         const material = new THREE.MeshStandardMaterial({
@@ -106,7 +108,7 @@ export class ViewerScene {
         const mesh = new THREE.Mesh(geometry, material);
         // Mapear Z (altura del modelo) → Y (arriba) en el mundo de Three.js.
         mesh.rotation.x = -Math.PI / 2;
-        mesh.position.set(item.xOffset, zOffset, 0);
+        mesh.position.set(0, zOffset, 0);
         this.root.add(mesh);
       }
     }

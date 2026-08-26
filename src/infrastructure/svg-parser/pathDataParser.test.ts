@@ -33,7 +33,7 @@ describe("flattenPathData", () => {
   it("convierte un círculo de dos arcos en una polilínea cerrada", () => {
     const r = 50;
     const d = `M ${r} 0 A ${r} ${r} 0 1 0 ${-r} 0 A ${r} ${r} 0 1 0 ${r} 0 Z`;
-    const polys = flattenPathData(d, 0.1);
+    const polys = flattenPathData(d, 0.001);
     expect(polys).toHaveLength(1);
     const pts = polys[0].points;
     expect(pts.length).toBeGreaterThan(30);

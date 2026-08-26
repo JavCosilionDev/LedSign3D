@@ -55,7 +55,8 @@ describe("prototipo SVG → malla 3D (Fase 0d)", () => {
     const rIn = 20;
     const circlePath = (r: number) =>
       `M ${r} 0 A ${r} ${r} 0 1 0 ${-r} 0 A ${r} ${r} 0 1 0 ${r} 0 Z`;
-    const polys = flattenPathData(`${circlePath(rOut)} ${circlePath(rIn)}`, 0.1);
+    // Tolerancia fina: la poligonal aproxima bien el área del círculo.
+    const polys = flattenPathData(`${circlePath(rOut)} ${circlePath(rIn)}`, 0.001);
     expect(polys).toHaveLength(2);
 
     // Determinar exterior (mayor |área|) y agujero.
@@ -68,14 +69,18 @@ describe("prototipo SVG → malla 3D (Fase 0d)", () => {
       holes: [ensureOrientation(polys[holeIdx], true)],
     };
 
+    // El volumen de la extrusión es área del polígono (anillo) × altura.
+    const sectionArea =
+      Math.abs(signedArea(shape.outer)) -
+      shape.holes.reduce((sum, h) => sum + Math.abs(signedArea(h)), 0);
+
     // Suelo + pared interior: base.
     const base = await engine.extrude(shape, 30);
-    // π·(40²−20²)·30 ≈ 113097
-    expect(base.volume).toBeCloseTo(Math.PI * (rOut * rOut - rIn * rIn) * 30, 0);
+    expect(base.volume).toBeCloseTo(sectionArea * 30, 0);
 
     // Panel difusor: lámina plana con agujero, espesor 3.
     const panel = await engine.extrude(shape, 3);
-    expect(panel.volume).toBeCloseTo(Math.PI * (rOut * rOut - rIn * rIn) * 3, 0);
+    expect(panel.volume).toBeCloseTo(sectionArea * 3, 0);
     expect(panel.triangleCount).toBeGreaterThan(0);
   });
 });
